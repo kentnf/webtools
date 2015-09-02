@@ -1,0 +1,129 @@
+<script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+<script type="text/javascript">
+
+function load_data(tid) {
+	var histData = {};
+	$.ajax({
+        url: '/histdata?tid=' + tid,
+        async: false,
+        dataType: 'json',
+        success: function (data) {
+        	histData = data;
+        }
+    });
+	return histData;
+}
+
+/* 
+expression function
+
+developing time 1 week
+
+input table: RPKM table
+
+1. data input for replicate, the sample name should be end with rep1
+2. extract sample information for selection
+3. matrix for sample/condition comparison
+4. selection for repliate/sample value plot
+
+developing time 3 days
+
+input table, ration and adjust p value
+
+
+B. extract list of gene for heat map
+
+1. sample selection,
+2. normalization
+3. color choose
+
+C. condition filter
+
+There are two types of filter, the relation between types are and.
+These two types could be combined  
+
+1. selection comparison1 -> p value -> cutoff
+2. selection comparison2 -> p value -> cutoff 
+.....
+
+3. selection sample1 expression 
+4. selection sample2 expression
+.....
+
+*/
+
+$(function(){
+		var single_exp_height = 380; 
+		var default_bar_width = 20;
+		var margin = 65;
+
+		$('#submit').click( function(){
+			var tid = $('#transID').val();
+			var histData = load_data(tid);
+
+			// remove prev svg
+			d3.select("svg").remove();
+			
+			// plot expression dataset for each experiment
+			var data_i = 0;
+			for (var exp  in histData) {
+				data_i++;
+				var sample  = histData[exp]['sample'];
+				var express = [];
+			   	for (var j= 0; j<histData[exp]['express'].length; j++) {
+					var e = parseFloat(histData[exp]['express'][j]);
+					express.push(e);
+				}
+
+				// set svg size
+				var single_exp_width = sample.length * default_bar_width;
+				var svg = d3.select("#svg")
+					.append("svg")
+					.attr("width", single_exp_width + sample.length + margin)
+					.attr("height", single_exp_height + margin);
+
+				//setting scale
+				var max = d3.max(express, function(d) { return d; });
+				var xscale = d3.scale.linear().domain([0, sample.length]).range([margin, single_exp_width + sample.length]);
+				var yscale = d3.scale.linear().domain([0, max]).range([margin, single_exp_height]);
+
+				// setting axis
+				var xaxis = d3.svg.axis().scale(xscale).ticks(sample.length).tickFormat(function(d, i){ return sample[i]; }).orient("bottom");	//for sample
+				var yaxis = d3.svg.axis().scale(yscale).ticks(5).orient("right");		// for expression
+
+				// draw bar
+				console.log(express);
+				svg.selectAll("rect")
+			   		.data(express)
+			   		.enter()
+			   		.append("rect")
+			   		.attr("x", function(d, i) { return xscale(i); })
+					.attr("y", function(d) {return single_exp_height - yscale(d); } )
+			   		.attr("width", (default_bar_width - 1))
+			   		.attr("height", function(d) { return yscale(d); })
+					.attr("fill", "teal");
+
+				svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + single_exp_height + ")")
+    				.call(xaxis)
+					.selectAll("text")
+						.style("text-anchor", "end")
+            			.attr("dx", "-.8em")
+            			.attr("dy", ".15em")
+            			.attr("transform", function(d) {
+                			return "rotate(-90)" 
+                		});
+
+				svg.append("g")
+					.attr("class", "y axis")
+					.attr("transform", "translate(0," + 0 + ")")
+					.call(yaxis);
+
+				//break;
+			}
+		});
+});
+
+</script>
+

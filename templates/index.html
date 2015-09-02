@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block javascript %}
+{% include "index_js.html" %}
+{% endblock javascript %}
+
+{% block mainbody %}
+<div class="row">
+	<div class="col-md-12">
+		<form class="form-inline" role="form">
+			<div class="form-group">
+        		<label for="transID">Transcript ID:</label>
+				<input class="form-control" id="transID" type='text' />
+			</div>
+			<button type="button" class="btn btn-default" id="submit">
+				Submit
+			</button>
+		</form>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-12">
+	<div id=svg></div>
+	</div>
+</div>
+
+{% endblock mainbody %}
+
